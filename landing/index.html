@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arduini Digital — Automação, dashboards e sites sob medida</title>
+<meta name="description" content="Automações, planilhas inteligentes, dashboards, sites e chatbots para pequenas empresas. Escopo fechado, prazo curto, preço justo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4f1ea;
+    --paper2:#fbf9f4;
+    --ink:#191713;
+    --ink2:#3f3a32;
+    --muted:#7a7264;
+    --hair:#d9d3c4;
+    --orange:#e8500f;
+    --green:#256b45;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  [id]{scroll-margin-top:84px}
+  body{
+    font-family:'Archivo',sans-serif;background:var(--paper);color:var(--ink);
+    line-height:1.6;font-size:16px;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--orange);color:var(--paper)}
+  h1,h2,h3,.serif{font-family:'Fraunces',serif;font-weight:500;line-height:1.08;letter-spacing:-.01em}
+  .mono{font-family:'IBM Plex Mono',monospace}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+  a{color:inherit}
+
+  .label{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .btn{
+    display:inline-block;padding:16px 34px;text-decoration:none;
+    font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+    border:1px solid var(--ink);transition:background .18s,color .18s;
+  }
+  .btn-ink{background:var(--ink);color:var(--paper)}
+  .btn-ink:hover{background:var(--orange);border-color:var(--orange)}
+  .btn-line{background:transparent;color:var(--ink)}
+  .btn-line:hover{background:var(--ink);color:var(--paper)}
+  .u-link{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.1em;text-transform:uppercase;
+    text-decoration:none;border-bottom:1px solid var(--ink);padding-bottom:3px;
+  }
+  .u-link:hover{color:var(--orange);border-color:var(--orange)}
+  em.hl{font-style:italic;color:var(--orange)}
+
+  /* ===== Nav ===== */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    background:rgba(244,241,234,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--hair);
+  }
+  .nav-in{max-width:1180px;margin:0 auto;padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between}
+  .wordmark{font-family:'Fraunces',serif;font-size:19px;font-weight:600;text-decoration:none;letter-spacing:-.01em}
+  .wordmark sup{font-size:10px;color:var(--orange)}
+  .nav-links{display:flex;gap:34px;align-items:center}
+  .nav-links a{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+    text-decoration:none;color:var(--ink2);
+  }
+  .nav-links a:hover{color:var(--orange)}
+  .nav-links a.cta{
+    border:1px solid var(--ink);padding:10px 18px;color:var(--ink);
+  }
+  .nav-links a.cta:hover{background:var(--ink);color:var(--paper)}
+  @media(max-width:800px){.nav-links a:not(.cta){display:none}}
+
+  /* ===== Hero ===== */
+  .hero{padding:170px 0 0}
+  .hero-top{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid var(--ink);padding-bottom:14px;margin-bottom:44px;flex-wrap:wrap}
+  .hero h1{
+    font-size:clamp(42px,6.6vw,88px);font-weight:400;max-width:1020px;
+  }
+  .hero h1 .it{font-style:italic;font-weight:300}
+  .hero-cols{
+    display:grid;grid-template-columns:1.5fr 1fr;gap:60px;
+    padding:48px 0 64px;align-items:end;
+  }
+  .hero-cols p{font-size:18px;color:var(--ink2);max-width:520px;margin-bottom:34px}
+  .hero-ctas{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  .ficha{
+    border:1px solid var(--ink);background:var(--paper2);
+  }
+  .ficha .row{
+    display:flex;justify-content:space-between;gap:14px;padding:13px 18px;
+    border-bottom:1px solid var(--hair);font-size:13px;
+  }
+  .ficha .row:last-child{border-bottom:0}
+  .ficha .row b{font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:12px}
+  .ficha .head{
+    padding:12px 18px;border-bottom:1px solid var(--ink);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+    display:flex;justify-content:space-between;
+  }
+  .ficha .head span:last-child{color:var(--orange)}
+  @media(max-width:900px){.hero-cols{grid-template-columns:1fr;gap:40px}}
+
+  /* ===== Stats ===== */
+  .stats{border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)}
+  .stats-in{display:grid;grid-template-columns:repeat(3,1fr)}
+  .stat{padding:36px 34px;border-right:1px solid var(--hair)}
+  .stat:last-child{border-right:0}
+  .stat b{font-family:'Fraunces',serif;font-weight:500;font-size:46px;display:block;letter-spacing:-.02em}
+  .stat b i{font-style:italic;color:var(--orange)}
+  .stat span{color:var(--muted);font-size:14px;display:block;margin-top:6px;max-width:260px}
+  @media(max-width:800px){.stats-in{grid-template-columns:1fr}.stat{border-right:0;border-bottom:1px solid var(--hair)}.stat:last-child{border-bottom:0}}
+
+  /* ===== Section scaffolding ===== */
+  section{padding:100px 0}
+  .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:20px;border-bottom:1px solid var(--ink);padding-bottom:16px;margin-bottom:0;flex-wrap:wrap}
+  .sec-head h2{font-size:clamp(30px,4vw,48px);font-weight:400}
+  .sec-head h2 .it{font-style:italic}
+
+  /* ===== Services ===== */
+  .svc-grid{display:grid;grid-template-columns:repeat(3,1fr);border-left:1px solid var(--hair)}
+  .svc{
+    border-right:1px solid var(--hair);border-bottom:1px solid var(--hair);
+    padding:34px 30px 30px;min-height:270px;display:flex;flex-direction:column;
+    transition:background .18s,color .18s;position:relative;background:transparent;
+  }
+  .svc:hover{background:var(--ink);color:var(--paper)}
+  .svc:hover .label,.svc:hover p{color:#b8b2a4}
+  .svc:hover .price{color:var(--orange)}
+  .svc .idx{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--orange);
+    margin-bottom:26px;display:block;
+  }
+  .svc h3{font-size:22px;font-weight:500;margin-bottom:12px}
+  .svc p{font-size:14.5px;color:var(--ink2);flex:1}
+  .svc .price{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;
+    margin-top:22px;color:var(--ink);
+  }
+  @media(max-width:960px){.svc-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:620px){.svc-grid{grid-template-columns:1fr}}
+
+  /* ===== Process ===== */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-left:1px solid var(--hair)}
+  .step{padding:40px 34px;border-right:1px solid var(--hair)}
+  .step .n{
+    font-family:'Fraunces',serif;font-style:italic;font-weight:300;
+    font-size:64px;color:var(--orange);display:block;line-height:1;margin-bottom:22px;
+  }
+  .step h3{font-size:20px;margin-bottom:10px}
+  .step p{font-size:14.5px;color:var(--ink2)}
+  @media(max-width:800px){.steps{grid-template-columns:1fr}.step{border-right:0;border-bottom:1px solid var(--hair)}}
+
+  /* ===== Portfolio ===== */
+  .work{display:grid;grid-template-columns:1fr 1.25fr;gap:0;border:1px solid var(--ink);margin-top:0}
+  .work-txt{padding:44px 40px;display:flex;flex-direction:column;border-right:1px solid var(--ink)}
+  .work-txt h3{font-size:30px;font-weight:400;margin-bottom:16px}
+  .work-txt h3 .it{font-style:italic}
+  .work-txt p{color:var(--ink2);font-size:15.5px;margin-bottom:30px;flex:1}
+  .work-shot{position:relative;background:#fff;aspect-ratio:16/10;overflow:hidden}
+  .work-shot iframe{width:200%;height:200%;border:0;transform:scale(.5);transform-origin:0 0;pointer-events:none}
+  .work-shot a{position:absolute;inset:0;z-index:2}
+  .work-cap{
+    border-top:1px solid var(--ink);grid-column:1/-1;display:flex;justify-content:space-between;
+    padding:12px 18px;font-family:'IBM Plex Mono',monospace;font-size:11px;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--muted);flex-wrap:wrap;gap:8px;
+  }
+  @media(max-width:900px){.work{grid-template-columns:1fr}.work-txt{border-right:0;border-bottom:1px solid var(--ink)}}
+
+  /* ===== Why ===== */
+  .why-list{border-top:1px solid var(--hair)}
+  .why{
+    display:grid;grid-template-columns:70px 300px 1fr;gap:24px;align-items:baseline;
+    padding:26px 6px;border-bottom:1px solid var(--hair);
+  }
+  .why .idx{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--orange)}
+  .why h3{font-size:20px;font-weight:500}
+  .why p{color:var(--ink2);font-size:15px}
+  @media(max-width:800px){.why{grid-template-columns:1fr;gap:6px}}
+
+  /* ===== CTA final ===== */
+  .cta-final{background:var(--ink);color:var(--paper);padding:110px 0}
+  .cta-final .label{color:#8f887a}
+  .cta-final h2{font-size:clamp(36px,5.5vw,72px);font-weight:400;max-width:900px;margin:18px 0 26px}
+  .cta-final h2 .it{font-style:italic;color:var(--orange)}
+  .cta-final p{color:#c9c3b4;max-width:560px;font-size:17px;margin-bottom:40px}
+  .cta-final .btn-paper{
+    background:var(--orange);color:var(--ink);border:1px solid var(--orange);
+  }
+  .cta-final .btn-paper:hover{background:var(--paper);border-color:var(--paper)}
+  .cta-mail{margin-top:22px;font-size:14px;color:#8f887a}
+  .cta-mail a{color:var(--paper);text-decoration:underline;text-underline-offset:4px}
+
+  footer{background:var(--ink);color:#8f887a;border-top:1px solid #2e2a23;padding:30px 0 40px}
+  .foot-in{max-width:1180px;margin:0 auto;padding:0 28px}
+  .foot-word{
+    font-family:'Fraunces',serif;font-weight:500;color:var(--paper);
+    font-size:clamp(54px,10vw,130px);line-height:1;letter-spacing:-.02em;margin-bottom:22px;
+  }
+  .foot-word i{font-style:italic;color:var(--orange)}
+  .foot-row{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase}
+
+  /* ===== Reveal ===== */
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ===== WhatsApp float ===== */
+  .wa-float{
+    position:fixed;right:22px;bottom:22px;z-index:60;
+    width:54px;height:54px;background:var(--ink);border:1px solid var(--ink);
+    display:grid;place-items:center;text-decoration:none;transition:background .18s;
+  }
+  .wa-float:hover{background:var(--orange);border-color:var(--orange)}
+  .wa-float svg{width:26px;height:26px;fill:var(--paper)}
+</style>
+</head>
+<body>
+
+<!-- ===================== NAV ===================== -->
+<nav>
+  <div class="nav-in">
+    <a class="wordmark" href="#">Arduini Digital<sup>®</sup></a>
+    <div class="nav-links">
+      <a href="#servicos">Serviços</a>
+      <a href="#processo">Processo</a>
+      <a href="#portfolio">Portfólio</a>
+      <a class="cta" href="#contato">Pedir orçamento</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-top">
+      <span class="label">Estúdio independente — Brasil</span>
+      <span class="label">Automação · Dashboards · Sites · Chatbots</span>
+    </div>
+    <h1>Menos trabalho manual.<br><span class="it">Mais horas para o que</span> <em class="hl">dá lucro.</em></h1>
+    <div class="hero-cols">
+      <div>
+        <p>Automações, planilhas inteligentes, sites e chatbots para pequenas empresas — com escopo e preço fechados antes de começar, e entrega em dias, não em semanas.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-ink" href="#contato">Pedir orçamento grátis</a>
+          <a class="u-link" href="#portfolio">Ver projeto ao vivo</a>
+        </div>
+      </div>
+      <div class="ficha reveal">
+        <div class="head"><span>Condições de trabalho</span><span>※</span></div>
+        <div class="row"><span>Resposta</span><b>até 2h úteis</b></div>
+        <div class="row"><span>Proposta com preço fechado</span><b>até 24h</b></div>
+        <div class="row"><span>Entrega típica</span><b>3–7 dias</b></div>
+        <div class="row"><span>Revisões</span><b>incluídas</b></div>
+        <div class="row"><span>Pagamento</span><b>por projeto</b></div>
+      </div>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="wrap stats-in">
+      <div class="stat reveal"><b>−15<i>h</i></b><span>de trabalho manual eliminadas por semana com uma única automação</span></div>
+      <div class="stat reveal"><b>3–7 <i>dias</i></b><span>prazo típico de um projeto completo, do briefing à entrega</span></div>
+      <div class="stat reveal"><b>100<i>%</i></b><span>do escopo e do preço definidos antes de começar — sem surpresa</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== SERVIÇOS ===================== -->
+<section id="servicos">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <h2>O que eu <span class="it">resolvo</span></h2>
+      <span class="label">Serviços — 01/06</span>
+    </div>
+    <div class="svc-grid">
+      <div class="svc reveal">
+        <span class="idx">01</span>
+        <h3>Automações</h3>
+        <p>Conecto seus sistemas — WhatsApp, e-mail, planilhas, CRM — e elimino tarefas repetitivas com integrações e scripts sob medida.</p>
+        <span class="price">a partir de R$ 350</span>
+      </div>
+      <div class="svc reveal">
+        <span class="idx">02</span>
+        <h3>Dashboards &amp; planilhas</h3>
+        <p>Controle financeiro, estoque e vendas em painéis que se atualizam sozinhos. Chega de planilha-monstro.</p>
+        <span class="price">a partir de R$ 250</span>
+      </div>
+      <div class="svc reveal">
+        <span class="idx">03</span>
+        <h3>Sites &amp; landing pages</h3>
+        <p>Página profissional, rápida e responsiva. Esta que você está lendo é um exemplo real do meu trabalho.</p>
+        <span class="price">a partir de R$ 450</span>
+      </div>
+      <div class="svc reveal">
+        <span class="idx">04</span>
+        <h3>Chatbots de atendimento</h3>
+        <p>Atendimento automático no WhatsApp ou no site: responde, qualifica e agenda — 24 horas por dia.</p>
+        <span class="price">a partir de R$ 600</span>
+      </div>
+      <div class="svc reveal">
+        <span class="idx">05</span>
+        <h3>Dados organizados</h3>
+        <p>Listas de leads, catálogos e dados espalhados em PDFs e sites — extraídos, limpos e entregues em planilha.</p>
+        <span class="price">a partir de R$ 200</span>
+      </div>
+      <div class="svc reveal">
+        <span class="idx">06</span>
+        <h3>Conteúdo em escala</h3>
+        <p>Descrições de produto, textos de site e e-mails comerciais em volume, com revisão humana em cada peça.</p>
+        <span class="price">a partir de R$ 150</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PROCESSO ===================== -->
+<section id="processo" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <h2>Simples de contratar,<br><span class="it">rápido de receber</span></h2>
+      <span class="label">Processo — 3 etapas</span>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <span class="n">1.</span>
+        <h3>Você descreve o problema</h3>
+        <p>O que está tomando seu tempo ou travando seu negócio. Pode ser por WhatsApp, do jeito que sair.</p>
+      </div>
+      <div class="step reveal">
+        <span class="n">2.</span>
+        <h3>Recebe escopo, prazo e preço</h3>
+        <p>Em até 24h, uma proposta fechada: o que será entregue, quando e por quanto. Aprovou, começo na hora.</p>
+      </div>
+      <div class="step reveal">
+        <span class="n">3.</span>
+        <h3>Acompanha até a entrega</h3>
+        <p>Entregas parciais, revisões incluídas e uma explicação final de como usar tudo. Você fica dono da solução.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PORTFÓLIO ===================== -->
+<section id="portfolio" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <h2>Um projeto <span class="it">funcionando agora</span></h2>
+      <span class="label">Portfólio — ao vivo</span>
+    </div>
+    <div class="work reveal">
+      <div class="work-txt">
+        <h3>Dashboard financeiro <span class="it">interativo</span></h3>
+        <p>Painel completo com indicadores, fluxo de caixa, despesas por categoria e movimentações — a visão que todo dono de negócio deveria ter da própria empresa. Nada de print estático: clique e use.</p>
+        <div><a class="btn btn-line" href="../dashboard/index.html" target="_blank">Abrir o dashboard →</a></div>
+      </div>
+      <div class="work-shot">
+        <iframe src="../dashboard/index.html" title="Dashboard demonstrativo" loading="lazy" scrolling="no"></iframe>
+        <a href="../dashboard/index.html" target="_blank" aria-label="Abrir dashboard"></a>
+      </div>
+      <div class="work-cap">
+        <span>Projeto demonstrativo — Aurum, controle financeiro</span>
+        <span>HTML · JS · Chart.js</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== POR QUE ===================== -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <h2>O que você pode <span class="it">esperar</span></h2>
+      <span class="label">Compromissos</span>
+    </div>
+    <div class="why-list">
+      <div class="why reveal">
+        <span class="idx">a.</span>
+        <h3>Velocidade real</h3>
+        <p>Fluxo moderno de desenvolvimento: entrego em dias o que agências entregam em semanas.</p>
+      </div>
+      <div class="why reveal">
+        <span class="idx">b.</span>
+        <h3>Preço de freelancer, acabamento de estúdio</h3>
+        <p>Sem estrutura cara para sustentar, o valor vai para o que importa — o seu resultado.</p>
+      </div>
+      <div class="why reveal">
+        <span class="idx">c.</span>
+        <h3>Comunicação sem sumiço</h3>
+        <p>Status do projeto sempre à mão. Resposta rápida, atualizações constantes, zero mistério.</p>
+      </div>
+      <div class="why reveal">
+        <span class="idx">d.</span>
+        <h3>Entrega que você entende</h3>
+        <p>Todo projeto vem com explicação de uso. Você fica dono da solução, não refém de quem fez.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CTA FINAL ===================== -->
+<div class="cta-final" id="contato">
+  <div class="wrap">
+    <span class="label">Orçamento grátis — resposta em até 24h</span>
+    <h2>Qual tarefa está <span class="it">roubando</span> o seu tempo hoje?</h2>
+    <p>Me mande uma mensagem contando. Você recebe uma proposta com escopo, prazo e preço fechados — sem compromisso.</p>
+    <a class="btn btn-paper" href="https://wa.me/5534997892249?text=Ol%C3%A1%20Vinicius!%20Vi%20sua%20p%C3%A1gina%20e%20quero%20um%20or%C3%A7amento." target="_blank">Chamar no WhatsApp</a>
+    <div class="cta-mail">ou por e-mail — <a href="mailto:vinidnz1402@gmail.com">vinidnz1402@gmail.com</a></div>
+  </div>
+</div>
+
+<footer>
+  <div class="foot-in">
+    <div class="foot-word">Arduini <i>Digital</i></div>
+    <div class="foot-row">
+      <span>© 2026 — Vinicius Arduini</span>
+      <span>Automação · Dashboards · Sites · Chatbots · Dados</span>
+    </div>
+  </div>
+</footer>
+
+<a class="wa-float" href="https://wa.me/5534997892249?text=Ol%C3%A1%20Vinicius!%20Vi%20sua%20p%C3%A1gina%20e%20quero%20um%20or%C3%A7amento." target="_blank" aria-label="WhatsApp">
+  <svg viewBox="0 0 32 32"><path d="M16 3C9.4 3 4 8.4 4 15c0 2.1.6 4.2 1.6 6L4 29l8.2-1.5c1.7.9 3.7 1.5 5.8 1.5 6.6 0 12-5.4 12-12S22.6 3 16 3zm0 22c-1.8 0-3.5-.5-5-1.3l-.4-.2-4.9.9.9-4.7-.2-.4C5.5 17.7 5 16.4 5 15 5 9 9.9 4 16 4s11 5 11 11-4.9 10-11 10zm5.5-7.4c-.3-.2-1.8-.9-2-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-.9 1.1-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.6-.1-.2-.7-1.7-1-2.3-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4-.1-.2-.3-.2-.5-.4z"/></svg>
+</a>
+
+<script>
+  const io = new IntersectionObserver((es)=>{
+    es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  },{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  // rolagem dos links internos controlada por JS — funciona também em
+  // navegadores/webviews que bloqueiam a navegação nativa por âncora
+  document.querySelectorAll('a[href^="#"]').forEach(a=>{
+    a.addEventListener('click', e=>{
+      e.preventDefault();
+      const id = a.getAttribute('href');
+      if(id.length > 1){
+        const el = document.querySelector(id);
+        if(el){
+          el.scrollIntoView({behavior:'smooth', block:'start'});
+          history.replaceState(null, '', id);
+        }
+      } else {
+        window.scrollTo({top:0, behavior:'smooth'});
+        history.replaceState(null, '', location.pathname);
+      }
+    });
+  });
+</script>
+</body>
+</html>

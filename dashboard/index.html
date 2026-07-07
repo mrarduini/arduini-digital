@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurum — Controle Financeiro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --paper:#f4f1ea;
+    --paper2:#fbf9f4;
+    --ink:#191713;
+    --ink2:#3f3a32;
+    --muted:#7a7264;
+    --hair:#d9d3c4;
+    --orange:#e8500f;
+    --green:#256b45;
+    --red:#c0391b;
+    --tan:#b5a98c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Archivo',sans-serif;background:var(--paper);color:var(--ink);
+    min-height:100vh;font-size:15px;line-height:1.5;
+  }
+  ::selection{background:var(--orange);color:var(--paper)}
+  .serif{font-family:'Fraunces',serif}
+  .mono{font-family:'IBM Plex Mono',monospace}
+  .label{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--muted);
+  }
+
+  .frame{max-width:1220px;margin:0 auto;padding:0 26px 60px}
+
+  /* ===== Topbar ===== */
+  .topbar{
+    border-bottom:1px solid var(--ink);
+    display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:20px 0 16px;flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:baseline;gap:14px;cursor:pointer}
+  .brand b{font-family:'Fraunces',serif;font-weight:600;font-size:24px;letter-spacing:-.01em}
+  .brand b i{font-style:italic;color:var(--orange)}
+  .tabs{display:flex;gap:26px;flex-wrap:wrap}
+  .tabs a{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+    text-decoration:none;color:var(--muted);padding-bottom:18px;margin-bottom:-17px;
+    border-bottom:2px solid transparent;cursor:pointer;user-select:none;
+  }
+  .tabs a.on{color:var(--ink);border-color:var(--orange)}
+  .tabs a:hover{color:var(--ink)}
+  .top-right{display:flex;align-items:center;gap:14px}
+  .seg{display:flex;border:1px solid var(--ink)}
+  .seg button{
+    border:0;background:transparent;color:var(--ink);cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    padding:9px 16px;transition:.15s;
+  }
+  .seg button + button{border-left:1px solid var(--ink)}
+  .seg button.active{background:var(--ink);color:var(--paper)}
+
+  .meta-row{
+    display:flex;justify-content:space-between;gap:12px;padding:12px 0;
+    border-bottom:1px solid var(--hair);flex-wrap:wrap;
+  }
+
+  /* ===== Views ===== */
+  .view{display:none}
+  .view.on{display:block}
+
+  /* ===== KPI ledger strip ===== */
+  .kpis{
+    display:grid;grid-template-columns:repeat(4,1fr);
+    border:1px solid var(--ink);border-top:0;background:var(--paper2);
+  }
+  .kpi{padding:26px 26px 20px;border-right:1px solid var(--hair);position:relative}
+  .kpi:last-child{border-right:0}
+  .kpi .label{display:block;margin-bottom:14px}
+  .kpi .value{
+    font-family:'Fraunces',serif;font-weight:500;font-size:34px;letter-spacing:-.02em;
+    line-height:1;display:block;
+  }
+  .kpi .delta{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.04em;
+    display:inline-block;margin-top:12px;
+  }
+  .delta.up{color:var(--green)}
+  .delta.down{color:var(--red)}
+  .kpi canvas{position:absolute;right:18px;bottom:16px;width:92px !important;height:30px !important;opacity:.9}
+  @media(max-width:980px){.kpis{grid-template-columns:1fr 1fr}.kpi:nth-child(2n){border-right:0}.kpi{border-bottom:1px solid var(--hair)}}
+  @media(max-width:560px){.kpis{grid-template-columns:1fr}.kpi{border-right:0}}
+
+  /* ===== Panels ===== */
+  .grid2{display:grid;grid-template-columns:1.85fr 1fr;gap:0;border:1px solid var(--ink);border-top:0}
+  .panel{background:var(--paper2)}
+  .grid2 .panel:first-child{border-right:1px solid var(--ink)}
+  .panel-head{
+    display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+    padding:16px 24px;border-bottom:1px solid var(--hair);
+  }
+  .panel-head h3{font-family:'Fraunces',serif;font-weight:500;font-size:19px}
+  .panel-body{padding:22px 24px 26px}
+  .legend{display:flex;gap:18px}
+  .legend span{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .legend i{width:10px;height:10px;display:inline-block;margin-right:7px;vertical-align:-1px}
+  @media(max-width:980px){.grid2{grid-template-columns:1fr}.grid2 .panel:first-child{border-right:0;border-bottom:1px solid var(--ink)}}
+
+  .donut-wrap{position:relative;height:190px;display:grid;place-items:center;margin-bottom:10px}
+  .donut-center{position:absolute;text-align:center}
+  .donut-center b{font-family:'Fraunces',serif;font-weight:500;font-size:21px;display:block}
+  .cat-list{border-top:1px solid var(--hair)}
+  .cat{
+    display:flex;align-items:center;gap:10px;font-size:13px;
+    padding:9px 2px;border-bottom:1px solid var(--hair);
+  }
+  .cat:last-child{border-bottom:0}
+  .cat i{width:9px;height:9px;flex:none}
+  .cat .name{color:var(--ink2)}
+  .cat .val{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:12px}
+  .cat .pct{color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px;width:40px;text-align:right}
+
+  /* ===== Table ===== */
+  .tablewrap{border:1px solid var(--ink);border-top:0;background:var(--paper2)}
+  .tablewrap.first{border-top:1px solid var(--ink);border-top-width:0}
+  table{width:100%;border-collapse:collapse}
+  th{
+    text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--muted);font-weight:500;
+    padding:12px 24px;border-bottom:1px solid var(--ink);
+  }
+  td{padding:14px 24px;font-size:14px;border-bottom:1px solid var(--hair)}
+  tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#f1ede2}
+  .tx b{font-weight:500;display:block}
+  .tx small{color:var(--muted);font-size:12px}
+  .badge{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+    border:1px solid currentColor;padding:4px 10px;white-space:nowrap;
+  }
+  .badge.click{cursor:pointer}
+  .badge.click:hover{background:var(--ink);color:var(--paper) !important;border-color:var(--ink)}
+  .b-ok{color:var(--green)}
+  .b-pend{color:#9a6b00}
+  .b-late{color:var(--red)}
+  .amount{font-family:'IBM Plex Mono',monospace;font-size:13.5px;white-space:nowrap}
+  .amount.neg{color:var(--red)}
+  .amount.pos{color:var(--green)}
+  tfoot td{
+    border-top:1px solid var(--ink);border-bottom:0;
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;
+  }
+
+  /* ===== Relatórios ===== */
+  .rep{
+    display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;
+    padding:20px 24px;border-bottom:1px solid var(--hair);
+  }
+  .rep:last-child{border-bottom:0}
+  .rep h4{font-family:'Fraunces',serif;font-weight:500;font-size:17px;margin-bottom:3px}
+  .rep p{color:var(--muted);font-size:13px}
+  .rep button{
+    border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    padding:10px 18px;transition:.15s;white-space:nowrap;
+  }
+  .rep button:hover{background:var(--ink);color:var(--paper)}
+  .rep button.done{background:var(--green);border-color:var(--green);color:var(--paper)}
+
+  .hint{
+    padding:10px 24px;border-top:1px solid var(--hair);
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted);
+  }
+
+  .foot{
+    display:flex;justify-content:space-between;gap:10px;padding:16px 2px 0;flex-wrap:wrap;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <!-- ===== Topbar ===== -->
+  <div class="topbar">
+    <div class="brand" id="brandHome">
+      <b>Aurum<i>.</i></b>
+      <span class="label">Controle financeiro</span>
+    </div>
+    <div class="tabs" id="tabs">
+      <a data-view="overview" class="on">Visão geral</a>
+      <a data-view="vendas">Vendas</a>
+      <a data-view="pagamentos">Pagamentos</a>
+      <a data-view="clientes">Clientes</a>
+      <a data-view="relatorios">Relatórios</a>
+    </div>
+    <div class="top-right">
+      <div class="seg" id="periodSeg">
+        <button data-p="6m" class="active">6 meses</button>
+        <button data-p="12m">12 meses</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <span class="label" id="viewTitle">Exercício 2026 — empresa demonstrativa</span>
+    <span class="label">Atualizado em 07 · Jul · 2026</span>
+  </div>
+
+  <!-- ============================================================
+       VISÃO GERAL
+  ============================================================ -->
+  <div class="view on" id="view-overview">
+    <section class="kpis">
+      <div class="kpi">
+        <span class="label">Receita total</span>
+        <span class="value" id="kpiRev">R$ 0</span>
+        <span class="delta up" id="kpiRevD">▲ 0%</span>
+        <canvas id="spark1"></canvas>
+      </div>
+      <div class="kpi">
+        <span class="label">Despesas</span>
+        <span class="value" id="kpiExp">R$ 0</span>
+        <span class="delta down" id="kpiExpD">▲ 0%</span>
+        <canvas id="spark2"></canvas>
+      </div>
+      <div class="kpi">
+        <span class="label">Lucro líquido</span>
+        <span class="value" id="kpiProfit">R$ 0</span>
+        <span class="delta up" id="kpiProfitD">▲ 0%</span>
+        <canvas id="spark3"></canvas>
+      </div>
+      <div class="kpi">
+        <span class="label">Novos clientes</span>
+        <span class="value" id="kpiCli">0</span>
+        <span class="delta up" id="kpiCliD">▲ 0%</span>
+        <canvas id="spark4"></canvas>
+      </div>
+    </section>
+
+    <section class="grid2">
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Fluxo de caixa</h3>
+          <div class="legend">
+            <span><i style="background:var(--ink)"></i>Receitas</span>
+            <span><i style="background:var(--orange)"></i>Despesas</span>
+          </div>
+        </div>
+        <div class="panel-body" style="height:300px"><canvas id="mainChart"></canvas></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Despesas por categoria</h3>
+          <span class="label" id="donutPeriodLabel">6 meses</span>
+        </div>
+        <div class="panel-body">
+          <div class="donut-wrap">
+            <canvas id="donut"></canvas>
+            <div class="donut-center">
+              <b id="donutTotal">R$ 0</b>
+              <span class="label">total</span>
+            </div>
+          </div>
+          <div class="cat-list" id="catList"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tablewrap">
+      <div class="panel-head" style="border-bottom:1px solid var(--ink)">
+        <h3>Últimas movimentações</h3>
+        <span class="label">Registro contínuo</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Descrição</th><th>Categoria</th><th>Data</th><th>Situação</th><th style="text-align:right">Valor</th></tr>
+        </thead>
+        <tbody id="txBody"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <!-- ============================================================
+       VENDAS
+  ============================================================ -->
+  <div class="view" id="view-vendas">
+    <section class="tablewrap" style="border-top:0">
+      <div class="panel-head" style="border-bottom:1px solid var(--ink)">
+        <h3>Vendas — Julho de 2026</h3>
+        <span class="label" id="vendasCount"></span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Pedido</th><th>Canal</th><th>Pagamento</th><th>Data</th><th style="text-align:right">Valor</th></tr>
+        </thead>
+        <tbody id="vendasBody"></tbody>
+        <tfoot>
+          <tr><td colspan="4">TOTAL DO MÊS</td><td style="text-align:right" id="vendasTotal"></td></tr>
+        </tfoot>
+      </table>
+    </section>
+  </div>
+
+  <!-- ============================================================
+       PAGAMENTOS
+  ============================================================ -->
+  <div class="view" id="view-pagamentos">
+    <section class="tablewrap" style="border-top:0">
+      <div class="panel-head" style="border-bottom:1px solid var(--ink)">
+        <h3>Contas a pagar</h3>
+        <span class="label" id="pagResumo"></span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Favorecido</th><th>Categoria</th><th>Vencimento</th><th>Situação</th><th style="text-align:right">Valor</th></tr>
+        </thead>
+        <tbody id="pagBody"></tbody>
+      </table>
+      <div class="hint">Dica — clique na situação para marcar como paga</div>
+    </section>
+  </div>
+
+  <!-- ============================================================
+       CLIENTES
+  ============================================================ -->
+  <div class="view" id="view-clientes">
+    <section class="tablewrap" style="border-top:0">
+      <div class="panel-head" style="border-bottom:1px solid var(--ink)">
+        <h3>Carteira de clientes</h3>
+        <span class="label" id="cliResumo"></span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Cliente</th><th>Cidade</th><th>Pedidos</th><th>Último pedido</th><th style="text-align:right">Total comprado</th></tr>
+        </thead>
+        <tbody id="cliBody"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <!-- ============================================================
+       RELATÓRIOS
+  ============================================================ -->
+  <div class="view" id="view-relatorios">
+    <section class="tablewrap" style="border-top:0">
+      <div class="panel-head" style="border-bottom:1px solid var(--ink)">
+        <h3>Relatórios</h3>
+        <span class="label">Exportação em CSV — abre no Excel</span>
+      </div>
+      <div id="repList"></div>
+    </section>
+  </div>
+
+  <div class="foot">
+    <span class="label">Projeto demonstrativo — Arduini Digital</span>
+    <span class="label">Painéis sob medida · Vinicius Arduini</span>
+  </div>
+</div>
+
+<script>
+/* ============ Dados fictícios ============ */
+const DATA = {
+  '6m': {
+    labels:['Fev','Mar','Abr','Mai','Jun','Jul'],
+    rev:[48200, 52800, 61500, 58900, 67300, 74800],
+    exp:[31500, 33900, 36200, 35100, 38400, 40200],
+    cli:[14, 18, 23, 21, 27, 32],
+  },
+  '12m': {
+    labels:['Ago','Set','Out','Nov','Dez','Jan','Fev','Mar','Abr','Mai','Jun','Jul'],
+    rev:[35100, 38400, 41200, 46800, 55300, 43900, 48200, 52800, 61500, 58900, 67300, 74800],
+    exp:[26400, 27100, 28900, 30800, 34600, 29800, 31500, 33900, 36200, 35100, 38400, 40200],
+    cli:[9, 11, 12, 15, 19, 12, 14, 18, 23, 21, 27, 32],
+  }
+};
+const INK='#191713', ORANGE='#e8500f', GREEN='#256b45', TAN='#b5a98c', RED='#c0391b', MUTED='#7a7264';
+const CATS = [
+  {name:'Fornecedores', color:INK, pct:38},
+  {name:'Folha de pagamento', color:ORANGE, pct:27},
+  {name:'Marketing', color:GREEN, pct:16},
+  {name:'Logística', color:TAN, pct:12},
+  {name:'Outros', color:'#8f8878', pct:7},
+];
+const TXS = [
+  {name:'Pedido #4832 — Loja online', sub:'Venda · Cartão de crédito', cat:'Vendas', date:'07/07/2026', st:'ok', val: 2890.00},
+  {name:'Distribuidora Almeida LTDA', sub:'Compra de insumos', cat:'Fornecedores', date:'06/07/2026', st:'pend', val: -8420.50},
+  {name:'Pedido #4831 — Marketplace', sub:'Venda · Pix', cat:'Vendas', date:'06/07/2026', st:'ok', val: 1240.00},
+  {name:'Campanha Meta Ads — Julho', sub:'Tráfego pago', cat:'Marketing', date:'05/07/2026', st:'ok', val: -1500.00},
+  {name:'Transportadora Rápido Sul', sub:'Fretes da semana', cat:'Logística', date:'04/07/2026', st:'late', val: -960.75},
+  {name:'Pedido #4827 — Atacado', sub:'Venda · Boleto', cat:'Vendas', date:'03/07/2026', st:'ok', val: 6780.00},
+];
+const VENDAS = [
+  {ped:'#4832', canal:'Loja online',  pag:'Cartão de crédito', date:'07/07/2026', val:2890.00},
+  {ped:'#4831', canal:'Marketplace',  pag:'Pix',               date:'06/07/2026', val:1240.00},
+  {ped:'#4830', canal:'Loja online',  pag:'Pix',               date:'05/07/2026', val:860.00},
+  {ped:'#4829', canal:'Atacado',      pag:'Boleto',            date:'05/07/2026', val:4320.00},
+  {ped:'#4828', canal:'Loja física',  pag:'Dinheiro',          date:'04/07/2026', val:517.50},
+  {ped:'#4827', canal:'Atacado',      pag:'Boleto',            date:'03/07/2026', val:6780.00},
+  {ped:'#4826', canal:'Marketplace',  pag:'Cartão de crédito', date:'02/07/2026', val:1975.00},
+  {ped:'#4825', canal:'Loja online',  pag:'Pix',               date:'01/07/2026', val:2210.00},
+];
+const PAGTOS = [
+  {nome:'Distribuidora Almeida LTDA', cat:'Fornecedores', venc:'10/07/2026', st:'pend', val:8420.50},
+  {nome:'Folha de pagamento — Julho', cat:'Folha',        venc:'05/08/2026', st:'pend', val:12400.00},
+  {nome:'Aluguel do galpão',          cat:'Estrutura',    venc:'08/07/2026', st:'pend', val:3800.00},
+  {nome:'Transportadora Rápido Sul',  cat:'Logística',    venc:'04/07/2026', st:'late', val:960.75},
+  {nome:'Energia elétrica',           cat:'Estrutura',    venc:'02/07/2026', st:'ok',   val:642.30},
+  {nome:'Meta Ads — Julho',           cat:'Marketing',    venc:'05/07/2026', st:'ok',   val:1500.00},
+];
+const CLIENTES = [
+  {nome:'Mercado Bom Preço',      cidade:'Uberlândia — MG',     ped:23, total:48200, ult:'06/07/2026'},
+  {nome:'Empório Santa Clara',    cidade:'Uberaba — MG',        ped:17, total:31450, ult:'05/07/2026'},
+  {nome:'Distribuidora JC',       cidade:'Ituiutaba — MG',      ped:9,  total:22615, ult:'28/06/2026'},
+  {nome:'Restaurante Dona Nena',  cidade:'Araguari — MG',       ped:14, total:19780, ult:'03/07/2026'},
+  {nome:'Padaria Pão da Serra',   cidade:'Patos de Minas — MG', ped:11, total:12340, ult:'01/07/2026'},
+  {nome:'Hotel Vista do Vale',    cidade:'Uberlândia — MG',     ped:6,  total:8920,  ult:'25/06/2026'},
+];
+const RELATORIOS = [
+  {id:'fluxo',      nome:'Fluxo de caixa — 12 meses',      desc:'Receitas, despesas e resultado mês a mês'},
+  {id:'vendas',     nome:'Vendas do mês — Julho de 2026',  desc:'Todos os pedidos com canal e forma de pagamento'},
+  {id:'categorias', nome:'Despesas por categoria',          desc:'Distribuição de valores do período selecionado'},
+];
+
+const fmtBRL = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const fmtBRL2 = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL',minimumFractionDigits:2});
+const sum = a => a.reduce((x,y)=>x+y,0);
+
+Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+Chart.defaults.font.size = 10.5;
+Chart.defaults.color = MUTED;
+
+/* ============ Troca de abas ============ */
+const VIEW_TITLES = {
+  overview:   'Exercício 2026 — empresa demonstrativa',
+  vendas:     'Vendas — registro do mês corrente',
+  pagamentos: 'Pagamentos — contas a pagar do período',
+  clientes:   'Clientes — carteira ativa',
+  relatorios: 'Relatórios — exportação de dados',
+};
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.getElementById('view-'+name).classList.add('on');
+  document.querySelectorAll('#tabs a').forEach(a=>a.classList.toggle('on', a.dataset.view===name));
+  document.getElementById('viewTitle').textContent = VIEW_TITLES[name];
+  if(name==='overview'){
+    requestAnimationFrame(()=>{ if(mainChart) mainChart.resize(); if(donut) donut.resize(); });
+  }
+}
+document.querySelectorAll('#tabs a').forEach(a=>{
+  a.addEventListener('click', e=>{ e.preventDefault(); showView(a.dataset.view); });
+});
+document.getElementById('brandHome').addEventListener('click', ()=>showView('overview'));
+
+/* ============ Contagem animada ============ */
+function countUp(el, target, money=true, dur=800){
+  const t0 = performance.now();
+  const final = money ? fmtBRL(target) : String(Math.round(target));
+  function tick(t){
+    const p = Math.min((t-t0)/dur, 1);
+    const ease = 1-Math.pow(1-p,3);
+    const v = target*ease;
+    el.textContent = money ? fmtBRL(v) : Math.round(v);
+    if(p<1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+  // garante o valor final mesmo com a aba em segundo plano (rAF pausado)
+  setTimeout(()=>{ el.textContent = final; }, dur+200);
+}
+
+/* ============ Sparklines ============ */
+const sparks = {};
+function spark(id, data, color){
+  const ctx = document.getElementById(id);
+  if(sparks[id]) sparks[id].destroy();
+  sparks[id] = new Chart(ctx,{
+    type:'line',
+    data:{labels:data.map((_,i)=>i),datasets:[{
+      data, borderColor:color, borderWidth:1.5, pointRadius:0, tension:0, fill:false
+    }]},
+    options:{responsive:false, plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{x:{display:false},y:{display:false}}, animation:{duration:600}}
+  });
+}
+
+/* ============ Gráfico principal ============ */
+let mainChart;
+function renderMain(d){
+  const ctx = document.getElementById('mainChart');
+  if(mainChart) mainChart.destroy();
+  mainChart = new Chart(ctx,{
+    type:'bar',
+    data:{labels:d.labels,datasets:[
+      {label:'Receitas', data:d.rev, backgroundColor:INK, borderRadius:0, maxBarThickness:22},
+      {label:'Despesas', data:d.exp, backgroundColor:ORANGE, borderRadius:0, maxBarThickness:22},
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{
+          backgroundColor:'#191713', titleColor:'#f4f1ea', bodyColor:'#c9c3b4',
+          cornerRadius:0, padding:12, displayColors:false,
+          callbacks:{label:(c)=>` ${c.dataset.label}: ${fmtBRL(c.raw)}`}
+        }},
+      scales:{
+        x:{grid:{display:false},border:{color:'#d9d3c4'}},
+        y:{grid:{color:'#e7e2d4'},border:{display:false},
+           ticks:{callback:v=>(v/1000)+'k'}}
+      }
+    }
+  });
+}
+
+/* ============ Donut ============ */
+let donut;
+function renderDonut(total){
+  const ctx = document.getElementById('donut');
+  if(donut) donut.destroy();
+  donut = new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:CATS.map(c=>c.name),datasets:[{
+      data:CATS.map(c=>c.pct), backgroundColor:CATS.map(c=>c.color),
+      borderWidth:2, borderColor:'#fbf9f4', hoverOffset:6
+    }]},
+    options:{cutout:'70%', plugins:{legend:{display:false},
+      tooltip:{backgroundColor:'#191713', cornerRadius:0, padding:10, displayColors:false,
+        callbacks:{label:(c)=>` ${c.label}: ${fmtBRL(total*c.raw/100)} (${c.raw}%)`}}}}
+  });
+  document.getElementById('donutTotal').textContent = fmtBRL(total);
+  document.getElementById('catList').innerHTML = CATS.map(c=>`
+    <div class="cat">
+      <i style="background:${c.color}"></i>
+      <span class="name">${c.name}</span>
+      <span class="val">${fmtBRL(total*c.pct/100)}</span>
+      <span class="pct">${c.pct}%</span>
+    </div>`).join('');
+}
+
+/* ============ Tabelas ============ */
+const stMap = {ok:['Pago','b-ok'], pend:['Pendente','b-pend'], late:['Atrasado','b-late']};
+
+document.getElementById('txBody').innerHTML = TXS.map(t=>`
+  <tr>
+    <td class="tx"><b>${t.name}</b><small>${t.sub}</small></td>
+    <td style="color:var(--ink2)">${t.cat}</td>
+    <td class="mono" style="font-size:12.5px;color:var(--muted)">${t.date}</td>
+    <td><span class="badge ${stMap[t.st][1]}">${stMap[t.st][0]}</span></td>
+    <td style="text-align:right" class="amount ${t.val<0?'neg':'pos'}">${t.val<0?'−':'+'} ${fmtBRL2(Math.abs(t.val))}</td>
+  </tr>`).join('');
+
+/* Vendas */
+document.getElementById('vendasBody').innerHTML = VENDAS.map(v=>`
+  <tr>
+    <td class="mono" style="font-size:13px">${v.ped}</td>
+    <td style="color:var(--ink2)">${v.canal}</td>
+    <td style="color:var(--ink2)">${v.pag}</td>
+    <td class="mono" style="font-size:12.5px;color:var(--muted)">${v.date}</td>
+    <td style="text-align:right" class="amount pos">+ ${fmtBRL2(v.val)}</td>
+  </tr>`).join('');
+document.getElementById('vendasTotal').textContent = fmtBRL2(sum(VENDAS.map(v=>v.val)));
+document.getElementById('vendasCount').textContent = VENDAS.length + ' pedidos no período';
+
+/* Pagamentos — situação clicável */
+function renderPagtos(){
+  document.getElementById('pagBody').innerHTML = PAGTOS.map((p,i)=>`
+    <tr>
+      <td class="tx"><b>${p.nome}</b></td>
+      <td style="color:var(--ink2)">${p.cat}</td>
+      <td class="mono" style="font-size:12.5px;color:var(--muted)">${p.venc}</td>
+      <td><span class="badge click ${stMap[p.st][1]}" data-i="${i}" title="Clique para alternar">${stMap[p.st][0]}</span></td>
+      <td style="text-align:right" class="amount ${p.st==='ok'?'':'neg'}">${fmtBRL2(p.val)}</td>
+    </tr>`).join('');
+  const aberto = sum(PAGTOS.filter(p=>p.st!=='ok').map(p=>p.val));
+  document.getElementById('pagResumo').textContent = 'Em aberto: ' + fmtBRL2(aberto);
+  document.querySelectorAll('#pagBody .badge.click').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const p = PAGTOS[+b.dataset.i];
+      p.st = p.st==='ok' ? 'pend' : 'ok';
+      renderPagtos();
+    });
+  });
+}
+renderPagtos();
+
+/* Clientes */
+document.getElementById('cliBody').innerHTML = CLIENTES.map(c=>`
+  <tr>
+    <td class="tx"><b>${c.nome}</b></td>
+    <td style="color:var(--ink2)">${c.cidade}</td>
+    <td class="mono" style="font-size:13px">${c.ped}</td>
+    <td class="mono" style="font-size:12.5px;color:var(--muted)">${c.ult}</td>
+    <td style="text-align:right" class="amount">${fmtBRL(c.total)}</td>
+  </tr>`).join('');
+document.getElementById('cliResumo').textContent = CLIENTES.length + ' clientes ativos · ' + fmtBRL(sum(CLIENTES.map(c=>c.total))) + ' acumulado';
+
+/* Relatórios — exportação CSV real */
+function csvFor(id){
+  const sep = ';', EOL = '\r\n';
+  let rows = [];
+  if(id==='fluxo'){
+    const d = DATA['12m'];
+    rows.push(['Mês','Receitas (R$)','Despesas (R$)','Resultado (R$)']);
+    d.labels.forEach((m,i)=>rows.push([m, d.rev[i], d.exp[i], d.rev[i]-d.exp[i]]));
+    rows.push(['TOTAL', sum(d.rev), sum(d.exp), sum(d.rev)-sum(d.exp)]);
+  } else if(id==='vendas'){
+    rows.push(['Pedido','Canal','Pagamento','Data','Valor (R$)']);
+    VENDAS.forEach(v=>rows.push([v.ped, v.canal, v.pag, v.date, v.val.toFixed(2).replace('.',',')]));
+    rows.push(['TOTAL','','','', sum(VENDAS.map(v=>v.val)).toFixed(2).replace('.',',')]);
+  } else {
+    const p = document.querySelector('#periodSeg button.active').dataset.p;
+    const total = sum(DATA[p].exp);
+    rows.push(['Categoria','Percentual (%)','Valor (R$)']);
+    CATS.forEach(c=>rows.push([c.name, c.pct, (total*c.pct/100).toFixed(2).replace('.',',')]));
+    rows.push(['TOTAL', 100, total.toFixed(2).replace('.',',')]);
+  }
+  return '﻿' + rows.map(r=>r.join(sep)).join(EOL);
+}
+function downloadCSV(id, nome){
+  const blob = new Blob([csvFor(id)], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = nome.toLowerCase().replace(/[^a-z0-9]+/g,'-') + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+document.getElementById('repList').innerHTML = RELATORIOS.map(r=>`
+  <div class="rep">
+    <div><h4>${r.nome}</h4><p>${r.desc}</p></div>
+    <button data-id="${r.id}" data-nome="${r.nome}">Baixar CSV</button>
+  </div>`).join('');
+document.querySelectorAll('#repList button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    downloadCSV(b.dataset.id, b.dataset.nome);
+    b.textContent = 'Baixado ✓'; b.classList.add('done');
+    setTimeout(()=>{ b.textContent = 'Baixar CSV'; b.classList.remove('done'); }, 2200);
+  });
+});
+
+/* ============ Render por período ============ */
+function render(p){
+  const d = DATA[p];
+  const rev = sum(d.rev), exp = sum(d.exp), profit = rev-exp, cli = sum(d.cli);
+  countUp(document.getElementById('kpiRev'), rev);
+  countUp(document.getElementById('kpiExp'), exp);
+  countUp(document.getElementById('kpiProfit'), profit);
+  countUp(document.getElementById('kpiCli'), cli, false);
+
+  const g = (a)=>((a[a.length-1]-a[a.length-2])/a[a.length-2]*100).toFixed(1);
+  document.getElementById('kpiRevD').textContent = '▲ '+g(d.rev)+'% vs mês anterior';
+  document.getElementById('kpiExpD').textContent = '▲ '+g(d.exp)+'% vs mês anterior';
+  document.getElementById('kpiProfitD').textContent = '▲ '+g(d.rev.map((v,i)=>v-d.exp[i]))+'% vs mês anterior';
+  document.getElementById('kpiCliD').textContent = '▲ '+g(d.cli)+'% vs mês anterior';
+
+  spark('spark1', d.rev, INK);
+  spark('spark2', d.exp, ORANGE);
+  spark('spark3', d.rev.map((v,i)=>v-d.exp[i]), GREEN);
+  spark('spark4', d.cli, TAN);
+
+  renderMain(d);
+  renderDonut(exp);
+  document.getElementById('donutPeriodLabel').textContent = p==='6m'?'6 meses':'12 meses';
+}
+
+document.querySelectorAll('#periodSeg button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#periodSeg button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    render(b.dataset.p);
+  });
+});
+
+render('6m');
+</script>
+</body>
+</html>
