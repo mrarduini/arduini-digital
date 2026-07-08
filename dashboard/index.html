@@ -525,7 +525,7 @@ function renderDonut(total){
       data:CATS.map(c=>c.pct), backgroundColor:CATS.map(c=>c.color),
       borderWidth:2, borderColor:'#fbf9f4', hoverOffset:6
     }]},
-    options:{cutout:'70%', plugins:{legend:{display:false},
+    options:{cutout:'70%', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},
       tooltip:{backgroundColor:'#191713', cornerRadius:0, padding:10, displayColors:false,
         callbacks:{label:(c)=>` ${c.label}: ${fmtBRL(total*c.raw/100)} (${c.raw}%)`}}}}
   });
